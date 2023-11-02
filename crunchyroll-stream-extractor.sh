@@ -69,12 +69,14 @@ extract_videos(){
         local audio_index
         if [ $i -eq 0 ]; then
             audio_index=$vid_stream_nb
-            IGNORE_AUDIO=(${IGNORE_AUDIO[@]} $audio_index)
+            IGNORE_AUDIO=($audio_index)
         else
             local video_title=$(echo "$csx_entry" | pcregrep -M 'index='$i'\ncodec_type=video\nTAG:title=#[0-9]' | grep -e 'title' | sed 's/TAG:title=\(#.*\)/\1/')
-            audio_index=$(echo "$csx_entry" | pcregrep -M 'index=[0-9]\ncodec_type=audio\nTAG:language=[a-z]{2}-([A-Z]{2}|[1-9]+)\nTAG:title=[A-Z][a-z]+ (\([A-Za-z ]+\))? \[Video: '$video_title'\]' | grep -m 1 -e 'index' | sed 's/index=\([0-9]\)/\1/')
+            audio_index=$(echo "$csx_entry" | pcregrep -M 'index=[0-9]\ncodec_type=audio\nTAG:language=[a-z]{2}-([A-Z]{2}|[1-9]+)\nTAG:title=[A-Z][a-z]+( \([A-Za-z ]+\))? \[Video: '$video_title'\]' | grep -m 1 -e 'index' | sed 's/index=\([0-9]\)/\1/')
+            IGNORE_AUDIO=(${IGNORE_AUDIO[@]} $audio_index)
         fi
         local lang=$(echo "$csx_entry" | pcregrep -M 'index='${audio_index}'\ncodec_type=audio\nTAG:language=[a-z]{2}-([A-Z]{2}|[0-9]{3})' | grep -e 'language' | sed 's/TAG:language=\(.*\)/\1/')
+        echo "Ignore audio: "${IGNORE_AUDIO[@]}
         ffmpeg -i "$1" -map 0:${i} -map 0:${audio_index} -c copy "${1%.mkv}${AUDIO_FILENAME[$lang]}.mp4"
     done
 }
@@ -83,6 +85,7 @@ extract_videos(){
 extract_audios(){
     # $1 represents the mkv file
     local audio_indexes=( $(pcregrep -M 'index=[0-9]\ncodec_type=audio' .csx-entry.txt | grep -e 'index' | grep -vF "${IGNORE_AUDIO[@]}" | sed 's/index=\([0-9]\)/\1/') )
+    echo "Extracts those audio indexes: " $audio_indexes
 
     # Read the .csx-entry.txt file into a variable
     local csx_entry=$(cat .csx-entry.txt)
@@ -96,7 +99,7 @@ extract_audios(){
 # Extract Subtitles into a single ssa file
 extract_subtitles(){
     # $1 represents the mkv file
-    local subtitle_indexes=( $(pcregrep -M 'index=[0-9]\ncodec_type=subtitle' .csx-entry.txt | grep -e 'index' | sed 's/index=\([0-9]\)/\1/') )
+    local subtitle_indexes=( $(pcregrep -M 'index=[0-9]{1,2}\ncodec_type=subtitle' .csx-entry.txt | grep -e 'index' | sed 's/index=\([0-9]\)/\1/') )
 
     # Read the .csx-entry.txt file into a variable
     local csx_entry=$(cat .csx-entry.txt)
