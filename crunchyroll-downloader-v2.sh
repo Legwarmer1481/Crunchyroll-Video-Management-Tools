@@ -40,8 +40,8 @@ TITLE="$(pwd | sed 's/\/.*\/\(.*\)/\1/')"
 [ "$1" = '' ] && echo "The cookie etp-rt is needed" && exit || ETP_RT=$1
 [ "$2" = '' ] && echo "The series URL is needed" && exit || SERIES_URL=$2
 NEW_DIR=false
-SUBTITLES=(en-US fr-FR)
-AUDIOS=(ja-JP en-US fr-FR)
+SUBTITLES=(en-US fr-FR es-419 es-ES)
+AUDIOS=(ja-JP en-US fr-FR es-419 es-ES)
 AVAILABLE_LANGUAGES=(ar-ME ar-SA de-DE en-IN en-US es-419 es-ES es-LA fr-FR hi-IN it-IT ja-JP pt-BR pt-PT ru-RU zh-CN)
 MERGE=audio
 shift 2
@@ -140,7 +140,7 @@ download(){
     if [ $NEW_DIR = false ]; then
         ./crunchy-cli archive${audios}${subs} -m $MERGE -o "Season {season_number}/$TITLE S{season_number}E{episode_number}.mkv" $SERIES_URL
     else
-        ./crunchy-cli archive${audios}${subs} -m $MERGE -o "Season {season_number}/$TITLE S{season_number}E{episode_number}.mkv" $SERIES_URL
+        ../crunchy-cli archive${audios}${subs} -m $MERGE -o "Season {season_number}/$TITLE S{season_number}E{episode_number}.mkv" $SERIES_URL
     fi
 
 }
