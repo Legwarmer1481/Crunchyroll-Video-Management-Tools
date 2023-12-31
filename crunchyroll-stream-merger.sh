@@ -3,7 +3,7 @@
 # INSTRUCTIONS
 # ----------------------------------------------------
 # Usage:
-# ./merge-sub-dub.sh [dub,vf,419-dub,es-dub] [en-US,fr-FR,es-419,es-ES]
+# ./crunchyroll-stream-merger.sh [dub,vf,419-dub,es-dub] [en-US,fr-FR,es-419,es-ES]
 # [dub,vf,419-dub,es-dub] : versions
 # [english,french,spanish-419,spanish] : subtitles
 # ----------------------------------------------------
