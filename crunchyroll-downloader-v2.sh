@@ -11,7 +11,7 @@
 # INSTRUCTION
 # --------------------------------------------------
 #
-# Usage: ./crunchyroll-downloader-v2.sh ETP_RT SERIES_URL [Options...]
+# Usage: ./crunchyroll-downloader-v2.sh EMAIL PASSWORD SERIES_URL [Options...]
 # -s Subtitle filtering
 #    Available languages: ar-ME, ar-SA, de-DE, en-IN, en-US, es-419, es-ES, es-LA, fr-FR, hi-IN, it-IT, ja-JP, pt-BR, pt-PT, ru-RU, zh-CN
 #    Default: en-US fr-FR
@@ -37,14 +37,15 @@
 
 # Prepare Default Data
 TITLE="$(pwd | sed 's/\/.*\/\(.*\)/\1/')"
-[ "$1" = '' ] && echo "The cookie etp-rt is needed" && exit || ETP_RT=$1
-[ "$2" = '' ] && echo "The series URL is needed" && exit || SERIES_URL=$2
+[ "$1" = '' ] && echo "Your email used on crunchyroll is needed" && exit || EMAIL=$1
+[ "$2" = '' ] && echo "Your password used on crunchyroll is needed" && exit || PASSWORD=$2
+[ "$3" = '' ] && echo "The series URL is needed" && exit || SERIES_URL=$3
 NEW_DIR=false
 SUBTITLES=(en-US fr-FR es-419 es-ES)
 AUDIOS=(ja-JP en-US fr-FR es-419 es-ES)
 AVAILABLE_LANGUAGES=(ar-ME ar-SA de-DE en-IN en-US es-419 es-ES es-LA fr-FR hi-IN it-IT ja-JP pt-BR pt-PT ru-RU zh-CN)
 MERGE=audio
-shift 2
+shift 3
 
 # Processing Options
 get_args(){
@@ -53,14 +54,17 @@ get_args(){
         case $opt in
         s)
             SUBTITLES=(${OPTARG//,/" "})
+            echo "Selected subtitles: ${SUBTITLES[@]}"
             ;;
         a)
             AUDIOS=(${OPTARG//,/" "})
+            echo "Selected audio: ${AUDIOS[@]}"
             ;;
         t)
             TITLE="$OPTARG"
             NEW_DIR=true
             [ ! -d "$TITLE" ] && mkdir "$TITLE"
+            echo "Folder $TITLE made!"
             cd "$TITLE"
             ;;
         m)
@@ -77,8 +81,8 @@ get_args(){
 # Validates Arguments Inputs
 validate_inputs(){
 
-    # Validate etp-rt
-    [[ ! $ETP_RT =~ ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ ]] && echo "The cookie etp-rt is incorrect" && exit
+    # Validate email
+    [[ ! $EMAIL =~ ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]] && echo "The email is incorrect" && exit
 
     # Validate Series URL
     [[ ! $SERIES_URL =~ ^(http|https)://(www)?\.crunchyroll\.com/series/[A-Z0-9]{9}(/[a-z0-9-]*)?(\[.*\])?$ ]] && echo "The URL is incorrect" && exit
@@ -138,9 +142,9 @@ download(){
     done
 
     if [ $NEW_DIR = false ]; then
-        ./crunchy-cli archive${audios}${subs} -m $MERGE -o "Season {season_number}/$TITLE S{season_number}E{episode_number}.mkv" $SERIES_URL
+        ./crunchy-cli archive${audios}${subs} -m $MERGE -o "Season {season_number}/$TITLE S{season_number}E{episode_number}.mkv" --output-specials "Season 00/$TITLE S{season_number}E{episode_number}.mkv" $SERIES_URL
     else
-        ../crunchy-cli archive${audios}${subs} -m $MERGE -o "Season {season_number}/$TITLE S{season_number}E{episode_number}.mkv" $SERIES_URL
+        ../crunchy-cli archive${audios}${subs} -m $MERGE -o "Season {season_number}/$TITLE S{season_number}E{episode_number}.mkv" --output-specials "Season 00/$TITLE S{season_number}E{episode_number}.mkv" $SERIES_URL
     fi
 
 }
@@ -150,5 +154,5 @@ download(){
 get_args "$@"
 validate_inputs
 # Login to Crunchyroll
-[ $NEW_DIR = false ] && ./crunchy-cli --etp-rt "$ETP_RT" login || ../crunchy-cli --etp-rt "$ETP_RT" login
+[ $NEW_DIR = false ] && ./crunchy-cli login --credentials ${EMAIL}':'${PASSWORD} || ../crunchy-cli login --credentials ${EMAIL}':'${PASSWORD}
 download
