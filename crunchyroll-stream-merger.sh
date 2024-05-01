@@ -18,7 +18,21 @@ declare -A dubs_langs=( [dub]=en-US [vf]=fr-FR [419-dub]=es-419 [es-dub]=es-ES )
 _versions=(${1//','/' '})
 _subs=(${2//','/' '})
 
-
+    # Merges the given mp4 file into an MKV file with audio and subtitle streams.
+    #
+    # Parameters:
+    #   - $1: The path to the mp4 file.
+    #
+    # Returns:
+    #   None.
+    #
+    # The function performs the following steps:
+    #   1. Checks if the episode has chapters setup by checking the existence of a metadata file.
+    #   2. Fetches the video and original audio streams.
+    #   3. Fetches subtitles based on the values in the `_subs` array.
+    #   4. Fetches audio and subtitle streams for each version specified in the `_versions` array.
+    #   5. Builds the ffmpeg command to merge the streams into an MKV file.
+    #   6. Appends the ffmpeg command to a temporary file.
 merge_to_mkv(){
     # $1 is the mp4 file
     local metafile input_video input_audios input_subtitles maps map_index=1 metadata_audio meta_audio_index=1 metadata_sub meta_sub_index=0

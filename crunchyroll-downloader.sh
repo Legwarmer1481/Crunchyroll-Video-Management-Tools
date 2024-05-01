@@ -43,11 +43,23 @@ TITLE="$(pwd | sed 's/\/.*\/\(.*\)/\1/')"
 NEW_DIR=false
 SUBTITLES=(en-US fr-FR es-419 es-ES)
 AUDIOS=(ja-JP en-US fr-FR es-419 es-ES)
+declare -A dubs_langs=( [en-US]=dub [fr-FR]=vf [es-419]=419-dub [es-ES]=es-dub )
 AVAILABLE_LANGUAGES=(ar-ME ar-SA de-DE en-IN en-US es-419 es-ES es-LA fr-FR hi-IN it-IT ja-JP pt-BR pt-PT ru-RU zh-CN)
 MERGE=audio
 shift 3
 
-# Processing Options
+# This function processes command line arguments and sets variables accordingly.
+#
+# It uses the `getopts` command to parse the command line arguments.
+# The available options are:
+# - `s`: sets the SUBTITLES variable to an array of subtitles selected by the user.
+# - `a`: sets the AUDIOS variable to an array of audios selected by the user.
+# - `t`: sets the TITLE variable to the name of the directory to be created or the name of the existing directory to be used.
+# - `m`: sets the MERGE variable to the type of merge selected by the user.
+#
+# If an invalid option is encountered, an error message is displayed and the script exits with a status of 1.
+#
+# The function also checks if the directory specified by the TITLE variable does not exist and creates it if necessary.
 get_args(){
 
     while getopts "s:a:t:m:" opt; do
@@ -78,7 +90,11 @@ get_args(){
     done
 }
 
-# Validates Arguments Inputs
+
+    # Validates the inputs for email, series URL, subtitle languages, and audio languages.
+    #
+    # No parameters.
+    # No return value.
 validate_inputs(){
 
     # Validate email
@@ -126,7 +142,14 @@ validate_inputs(){
     done
 }
 
-# Download Crunchyroll series into an mkv file
+
+    # Downloads the series from Crunchyroll into an mkv file.
+    #
+    # This function uses the crunchy-cli tool to download the series and organize the directories by seasons.
+    # The function takes no parameters.
+    #
+    # Returns:
+    #   None
 download(){
     
     local subs audios
@@ -141,11 +164,11 @@ download(){
         subs="${subs} -s ${sub}"
     done
 
-    if [ $NEW_DIR = false ]; then
-        ./crunchy-cli archive${audios}${subs} -m $MERGE -o "Season {season_number}/$TITLE S{season_number}E{episode_number}.mkv" --output-specials "Season 00/$TITLE S{season_number}E{episode_number}.mkv" $SERIES_URL
-    else
-        ../crunchy-cli archive${audios}${subs} -m $MERGE -o "Season {season_number}/$TITLE S{season_number}E{episode_number}.mkv" --output-specials "Season 00/$TITLE S{season_number}E{episode_number}.mkv" $SERIES_URL
-    fi
+    crunchy-cli archive${audios}${subs} -m $MERGE --include-chapters -o "{series_name} ({release_year})/Season {season_number}/{series_name} ({release_year}) S{season_number}E{episode_number}.mkv" --output-specials "{series_name} ({release_year})/Season 00/{series_name} ({release_year}) S{season_number}E{episode_number}.mkv" $SERIES_URL
+    
+    for audio in "${AUDIOS[@]}"; do
+        crunchy-cli download -a ${audio} -o "{series_name} ({release_year})/${dubs_lang[$audio]}/Season {season_number}/{series_name} ({release_year}) S{season_number}E{episode_number}.mkv" --output-specials "{series_name} ({release_year})/${dubs_lang[$audio]}/Season 00/{series_name} ({release_year}) S{season_number}E{episode_number}.mkv" $SERIES_URL
+    done
 
 }
 
@@ -154,5 +177,5 @@ download(){
 get_args "$@"
 validate_inputs
 # Login to Crunchyroll
-[ $NEW_DIR = false ] && ./crunchy-cli login --credentials ${EMAIL}':'${PASSWORD} || ../crunchy-cli login --credentials ${EMAIL}':'${PASSWORD}
+[ $NEW_DIR = false ] && crunchy-cli login --credentials ${EMAIL}':'${PASSWORD}
 download
