@@ -1,5 +1,7 @@
 # Crunchyroll Video Management Tools
 
+**Notice: the program Crunchy-cli, that is used for the script, is now discontinued so the script is not of use anymore.**
+
 This is a CLI script to help organize your anime series to be ready for Kodi Playback. It can download the series using `Crunchyroll` Downloader that downloads your series that automatically organize the directories by Seasons and name the file compatible with Kodi naming conventions.
 
 ---
